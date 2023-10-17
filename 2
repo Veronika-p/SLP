@@ -1,0 +1,144 @@
+package mlp;
+
+public class MLP {
+
+    //массив входов
+    double[] enters;
+    
+    //массив скрытых нейронов
+    double[] hidden;
+    
+    //выходной нейрон
+    double outer;
+    
+    //массив связи от одного нейрона к другому, они двумерные, т.к. нейрона два
+    //от слоя входного к слою скрытому вес
+    double[][] wEH;
+    //от скрытого слоя к выходному.Поскольку не массив, то одномерный вес
+    double[] wHO;
+    //данные которыые задаются для обучения перчептрона
+    double[][] patterns={
+        {0,0}, {1,0}, {0,1},{1,1}
+    };
+    //данные правильных ответов
+    double[] answers ={0,1,1,0};
+    
+    //создадим конструктор, который запускается при создании копии класса.
+    MLP(){
+        //количество входных нейронов приязваем к длине массива
+        enters=new double[patterns[0].length];
+        
+        //количество скрытых нейронов, подбирается опытным путем, константа
+        hidden=new double[2];
+        //вес от какого нейрона к какому нейрону идет привязка от входных к скрытым
+        wEH=new double [enters.length][hidden.length];
+        //вес выходного привязываем к скрытым, потому что их больше
+        wHO=new double[hidden.length];
+        
+        init();
+        study();
+        
+        for(int p=0;p<patterns.length; p++){
+        for(int i=0; i<enters.length; i++){
+            enters[i]=patterns[p][i];
+            countOuter();
+            
+            System.out.println(outer);
+        }
+        }
+        
+        
+    }
+    //процедура иницилизации, делается отдельно, может вызываться несколько раз
+    //проинициализировать весовые коэффициенты небольшими начальными значениями
+    public void init(){
+    //удобнее всего делать в цикле, начинаем со связей со входа и скрытого слоя
+    for(int i=0;i<wEH.length;i++){
+    //перебираем каждый массив, проходимся по их элементам
+    for(int j=0;j<wEH[i].length;j++){
+    //присвоить значение близкое, но не равное нулю
+    wEH[i][j]=Math.random()*0.3+0.1;
+    }
+    }
+    //тоже самое для других весовых коэффициентов
+     for(int i=0;i<wHO.length;i++){
+         wHO[i]=Math.random()*0.3+0.1;
+   
+    }
+    }
+//расчет выходного нейрона для нашей сети
+public void countOuter(){
+//сначала считаем для первый слой от входов
+for (int i=0; i<hidden.length;i++){
+        //обнуляем скрытый нейрон
+hidden[i]=0;
+//
+for(int j=0; j<enters.length; j++){
+    //в него постоянно добавляются значения поступающие со скрытого слоя
+    //в скрытый нейнор добавляется значение входного нейрона умноженного на вес
+    //от i на входе к j на выходе
+    hidden[i]+=enters[j]*wEH[j][i];
+}
+if(hidden[i]>0.5)hidden[i]=1;else hidden[i]=0;
+}
+//выходной слой, обнуляем выходной нейрон
+outer=0;
+//перебираем нейроны скрытого слоя
+for(int i=0;i<hidden.length;i++){
+    outer+=hidden[i]*wHO[i];
+}
+if(outer>0.5) outer=1; else outer=0;
+}
+
+//метод обучения перцептрона
+//нам потребуется знание ошибки на выходе и ошибки на скрытых нейронах
+//
+public void study(){
+//массив для хранения ошибок на скрытых нейронах
+double[] err=new double[hidden.length];
+//глобальная ошибка, которая вычисляется для всех обучающих примеров
+double gError=0;
+//процедура обучения
+//рассчитываем ошибку по сравнению с полученным результатом и корректируем коэффициенты
+do{
+    gError=0;
+    for(int p=0;p<patterns.length; p++){
+        for(int i=0; i<enters.length; i++)
+            enters[i]=patterns[p][i];
+            countOuter();
+            // расчет ошибки, в зависимости от её величины будет в дальнейшем происходить коррекция
+            //и расчет ошибки скрытого слоя
+            double lErr=answers[p]-outer;
+            //суммируем ошибку
+            gError+=Math.abs(lErr);
+
+            
+            for(int i=0; i<hidden.length; i++)
+                err[i]=lErr*wHO[i];
+                
+                for(int i=0;i<enters.length;i++){
+                    for(int j=0;j<hidden.length;j++){
+                        wEH[i][j]+=0.1*err[j]*enters[i];
+                    }
+                }
+                
+                
+                for(int v=0;v<hidden.length;v++)
+                    wHO[v]+=0.1*lErr*hidden[v];
+      
+    }
+    System.out.println("gError="+gError);
+    
+}while(gError!=0);
+
+
+
+}
+
+
+public static void main(String[] args) {
+       
+    MLP mlp=new MLP();
+    }
+    
+}
